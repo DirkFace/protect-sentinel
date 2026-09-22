@@ -29,6 +29,36 @@ sidebar panel lets you browse past reports and trigger a run on demand.
 
 ---
 
+## Requirements
+
+- A UniFi Protect controller (UniFi OS console, Cloud Key, or UDM/UNVR)
+  reachable from Home Assistant, with a local account this add-on can log
+  in as (see [Install](#1-install) for why it needs to be local rather
+  than SSO, and MFA-free).
+- **For the core report** (person/vehicle/animal detections, incidents,
+  sensitive zones, camera-based watchlist entries): any camera with Smart
+  Detections enabled. This is most current UniFi Protect cameras —
+  G4-series and newer — not just the newer "AI"-branded or G6 line. G3
+  cameras don't support Smart Detections at all, so they'll show as quiet
+  all night even if they recorded plenty. Smart Detections also need to
+  be turned on **per camera** in Protect itself, separately from having
+  compatible hardware.
+- **For named face/plate watchlist entries** (`face:Dirk`, `plate:AB12CDE`
+  in `watch_list`): this needs Protect's Face Recognition or License
+  Plate Recognition specifically, which is narrower than basic Smart
+  Detections. You'll need either an AI-series camera (AI Bullet/360/Theta),
+  a G5 Pro or G6 camera, or an older G3/G4/G5 camera paired with an AI
+  Port or AI Key accessory. Without one of these, the rest of the add-on
+  (person/vehicle/animal detection, sensitive zones, `camera:` watchlist
+  entries) still works fine — you'd just have nothing to put in the named
+  face/plate entries.
+- Camera and licensing details change fairly often on Ubiquiti's side, so
+  if you're unsure what your own hardware supports, check
+  [Ubiquiti's own compatibility page](https://help.ui.com/hc/en-us/articles/360058867233-UniFi-Protect-Cameras-AI-Detections-and-Facial-Recognition)
+  rather than relying solely on this document.
+
+---
+
 ## Getting started
 
 ### 1. Install

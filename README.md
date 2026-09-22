@@ -13,12 +13,19 @@ face/plate/camera watchlists, sensitive-zone alerts for cameras that should
 see nothing overnight, cross-camera trail tracing, a morning brief, and a
 sidebar panel for browsing past reports and running one on demand.
 
+Needs a UniFi Protect controller and cameras with Smart Detections enabled
+(most current cameras, G4 and up — not just newer "AI"/G6 models). Named
+face/plate watchlist entries specifically need Face Recognition or License
+Plate Recognition hardware — see [Requirements](DOCS.md#requirements) in
+DOCS.md for the details.
+
 | Summary page | Detection stills |
 |---|---|
 | ![Summary page](https://raw.githubusercontent.com/DirkFace/protect-sentinel/main/docs/sample-summary.png) | ![Detection stills](https://raw.githubusercontent.com/DirkFace/protect-sentinel/main/docs/sample-stills.png) |
 
 See **[DOCS.md](DOCS.md)** for installation, full configuration reference,
 and a walkthrough of everything the report and watch engine can do.
+See **[CHANGELOG.md](CHANGELOG.md)** for version history.
 
 ---
 

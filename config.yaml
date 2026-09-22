@@ -1,5 +1,5 @@
 name: "Protect Sentinel"
-version: "0.6.0"
+version: "0.6.2"
 slug: protect_sentinel
 description: "Nightly PDF reports of UniFi Protect smart-detection events, with watchlists, a morning brief and an ingress panel."
 url: "https://github.com/DirkFace/protect-sentinel"
@@ -66,7 +66,7 @@ options:
   retain_days: 30
   log_level: "info"
 
-  # ── Watch engine (new in v2) ──────────────────────────────────────────
+  # ── Watch engine ───────────────────────────────────────────────────────
   # One rule per line: "face:Dirk", "plate:AB12CDE", "camera:Front Door".
   # Face/plate rules need face_name_field / plate_name_field set first — run
   # `sentinel inspect` (see README) to find the right field for your
@@ -96,7 +96,7 @@ options:
   # "mobile_app_johns_phone" (the part after "notify."). Leave blank to disable.
   notify_service: ""
 
-  # ── MQTT entities (new in v2) ─────────────────────────────────────────
+  # ── MQTT entities ──────────────────────────────────────────────────────
   # Publishes state as HA entities via MQTT auto-discovery, e.g. sensors for
   # last-run time, incident/detection counts, a watchlist-match binary
   # sensor, and a status sensor. Blank host disables this entirely — nothing

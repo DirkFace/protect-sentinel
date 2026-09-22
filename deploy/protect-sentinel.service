@@ -1,0 +1,20 @@
+# Oneshot unit paired with the timer; the container/CRON mode is not needed
+# when systemd owns the schedule.
+#   install to /etc/systemd/system/ then:
+#   systemctl enable --now protect-sentinel.timer
+[Unit]
+Description=UniFi Protect overnight person-detection report
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=pmsvc
+WorkingDirectory=/srv/protect-sentinel
+EnvironmentFile=/srv/protect-sentinel/.env
+ExecStart=/usr/bin/node dist/index.js run
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

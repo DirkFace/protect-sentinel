@@ -1,0 +1,157 @@
+name: "Protect Sentinel"
+version: "0.6.0"
+slug: protect_sentinel
+description: "Nightly PDF reports of UniFi Protect smart-detection events, with watchlists, a morning brief and an ingress panel."
+url: "https://github.com/DirkFace/protect-sentinel"
+arch:
+  - aarch64
+  - amd64
+startup: application
+boot: auto
+init: false
+apparmor: false
+
+# Sidebar panel, backed by the ingress web server in src/server/ingress.ts.
+ingress: true
+ingress_port: 8099
+panel_icon: mdi:cctv
+panel_title: "Sentinel"
+
+# Grants access to Home Assistant's Core REST API via the Supervisor proxy
+# (http://supervisor/core/api/...) and injects SUPERVISOR_TOKEN — needed for
+# the optional push-notification step (notify_service option below). Safe to
+# leave enabled even if you never set notify_service; it's simply unused then.
+homeassistant_api: true
+
+# Lets Supervisor restart the container if the ingress panel stops answering
+# (which only happens if the whole scheduler process has wedged, since both
+# run in-process together).
+watchdog: "http://[HOST]:8099/"
+
+map:
+  - type: share
+    read_only: false
+
+options:
+  protect_host: ""
+  protect_port: 443
+  protect_username: ""
+  protect_password: ""
+  protect_api_key: ""
+  protect_verify_tls: false
+  timezone: "Europe/London"
+  night_start: "22:00"
+  night_end: "06:00"
+  detect_types: "person"
+  min_score: 0
+  cluster_gap_seconds: 60
+  exclude_cameras: ""
+  include_cameras: ""
+  report_title: "Overnight Person Detection Report"
+  site_name: ""
+  max_thumbs_per_camera: 12
+  thumb_width: 640
+  include_event_table: true
+  send_if_empty: true
+  smtp_host: ""
+  smtp_port: 587
+  smtp_secure: false
+  smtp_user: ""
+  smtp_pass: ""
+  mail_from: ""
+  mail_to: ""
+  mail_cc: ""
+  mail_subject: "{site}Overnight person detections — {date} ({count})"
+  cron: "30 6 * * *"
+  retain_days: 30
+  log_level: "info"
+
+  # ── Watch engine (new in v2) ──────────────────────────────────────────
+  # One rule per line: "face:Dirk", "plate:AB12CDE", "camera:Front Door".
+  # Face/plate rules need face_name_field / plate_name_field set first — run
+  # `sentinel inspect` (see README) to find the right field for your
+  # controller before relying on them.
+  watch_list: ""
+  face_name_field: ""
+  plate_name_field: ""
+  flag_unknown_person: false
+  # Cameras that should see NO activity at all overnight — a back garden, a
+  # fuel or materials store, anywhere with no legitimate overnight
+  # foot/vehicle traffic. Any smart detection here (of the types in
+  # detect_types above) gets forced to top significance, its own red
+  # "URGENT" banner at the top of the PDF, top billing in the push
+  # notification, and a dedicated MQTT alert — distinct from watch_list,
+  # which is for tracking specific known faces/plates/cameras.
+  # Comma-separated camera names or IDs, e.g. "Rear Garden, Side Gate".
+  sensitive_cameras: ""
+  # Smart-detect types that count as an alert on a sensitive camera above —
+  # independent of detect_types, and can be wider (e.g. add "animal" for a
+  # garden camera) or narrower, without affecting any other camera. Leave
+  # blank to just reuse detect_types.
+  sensitive_detect_types: ""
+  cross_camera_window_seconds: 45
+  trend_lookback_nights: 14
+  morning_summary: true
+  # Home Assistant notify service to push the brief to, e.g.
+  # "mobile_app_johns_phone" (the part after "notify."). Leave blank to disable.
+  notify_service: ""
+
+  # ── MQTT entities (new in v2) ─────────────────────────────────────────
+  # Publishes state as HA entities via MQTT auto-discovery, e.g. sensors for
+  # last-run time, incident/detection counts, a watchlist-match binary
+  # sensor, and a status sensor. Blank host disables this entirely — nothing
+  # is assumed about a broker being present.
+  mqtt_host: ""
+  mqtt_port: 1883
+  mqtt_username: ""
+  mqtt_password: ""
+
+schema:
+  protect_host: str
+  protect_port: port
+  protect_username: str?
+  protect_password: password?
+  protect_api_key: password?
+  protect_verify_tls: bool
+  timezone: str
+  night_start: match(^[0-2]?[0-9]:[0-5][0-9]$)
+  night_end: match(^[0-2]?[0-9]:[0-5][0-9]$)
+  detect_types: str
+  min_score: int(0,100)
+  cluster_gap_seconds: int(0,)
+  exclude_cameras: str?
+  include_cameras: str?
+  report_title: str
+  site_name: str?
+  max_thumbs_per_camera: int(0,)
+  thumb_width: int(1,)
+  include_event_table: bool
+  send_if_empty: bool
+  smtp_host: str?
+  smtp_port: port
+  smtp_secure: bool
+  smtp_user: str?
+  smtp_pass: password?
+  mail_from: str?
+  mail_to: str
+  mail_cc: str?
+  mail_subject: str
+  cron: str
+  retain_days: int(0,)
+  log_level: list(debug|info|warn|error)
+
+  watch_list: str?
+  face_name_field: str?
+  plate_name_field: str?
+  flag_unknown_person: bool
+  sensitive_cameras: str?
+  sensitive_detect_types: str?
+  cross_camera_window_seconds: int(0,)
+  trend_lookback_nights: int(0,)
+  morning_summary: bool
+  notify_service: str?
+
+  mqtt_host: str?
+  mqtt_port: port
+  mqtt_username: str?
+  mqtt_password: password?

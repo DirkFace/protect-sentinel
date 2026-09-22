@@ -1,0 +1,10 @@
+services:
+  protect-sentinel:
+    build: .
+    container_name: protect-sentinel
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./out:/app/out
+    environment:
+      OUT_DIR: /app/out

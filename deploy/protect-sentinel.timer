@@ -1,0 +1,10 @@
+[Unit]
+Description=Run the overnight Protect report each morning
+
+[Timer]
+OnCalendar=*-*-* 06:30:00
+Persistent=true
+RandomizedDelaySec=120
+
+[Install]
+WantedBy=timers.target

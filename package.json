@@ -1,0 +1,38 @@
+{
+  "name": "protect-sentinel",
+  "version": "0.1.0",
+  "description": "Nightly PDF report of UniFi Protect person detections during overnight hours, emailed automatically.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "sentinel": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node dist/index.js schedule",
+    "demo": "tsx src/index.ts run --demo --no-email --out ./out"
+  },
+  "dependencies": {
+    "luxon": "^3.5.0",
+    "mqtt": "^5.16.0",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.9.15",
+    "pdfkit": "^0.15.1",
+    "undici": "^6.21.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/luxon": "^3.4.2",
+    "@types/node": "^22.7.5",
+    "@types/node-cron": "^3.0.11",
+    "@types/nodemailer": "^6.4.16",
+    "@types/pdfkit": "^0.13.5",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3"
+  }
+}

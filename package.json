@@ -12,6 +12,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "postbuild": "node -e \"require('fs').cpSync('src/assets','dist/assets',{recursive:true})\"",
     "dev": "tsx src/index.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "start": "node dist/index.js schedule",

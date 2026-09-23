@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.6.4
+
+- Dropped "UNIFI PROTECT" from the PDF's own header — to avoid any
+  impression of Ubiquiti endorsement, it now shows the Protect Sentinel
+  icon and name instead. (The report still names UniFi Protect
+  descriptively elsewhere, e.g. in the README/DOCS — this only affects
+  the report's own masthead.)
+
+## 0.6.3
+
+- Fixed the PDF's own header, which still read "UNIFI PROTECT · OVERNIGHT
+  WATCH" — a rename leftover that slipped past earlier text sweeps because
+  it was in a different case ("OVERNIGHT WATCH") than what those searches
+  looked for. Now reads "UNIFI PROTECT · SENTINEL", with no baked-in
+  assumption that the report window is overnight.
+
 ## 0.6.2
 
 - Added a **Requirements** section to DOCS.md (and a short pointer in the

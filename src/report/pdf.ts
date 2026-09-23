@@ -1,9 +1,17 @@
 import PDFDocument from 'pdfkit';
 import { DateTime } from 'luxon';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { ReportData } from './aggregate.js';
 import { fmtDuration, fmtTime } from './window.js';
 import type { WatchMatch, CrossCameraTrail } from '../watch/types.js';
 import { describeWatchMatch, shortMatchTag } from '../watch/format.js';
+
+// Resolves next to this module either way: dist/report/pdf.js in the built
+// container, or src/report/pdf.ts under tsx in dev — the sibling `assets/`
+// folder is populated in both cases (see package.json's `postbuild`).
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ICON_PATH = path.join(__dirname, '../assets/icon.png');
 
 const PALETTE = {
   ink: '#101522',
@@ -105,11 +113,14 @@ function drawCover(doc: Doc, data: ReportData, meta: PdfMeta): void {
   const w = doc.page.width;
   doc.rect(0, 0, w, 132).fill(PALETTE.band);
 
+  const iconSize = 16;
+  doc.image(ICON_PATH, PAGE.margin, 32, { width: iconSize, height: iconSize });
+
   doc
     .font('Helvetica-Bold')
     .fontSize(9)
     .fillColor('#8ea3c2')
-    .text('UNIFI PROTECT · OVERNIGHT WATCH', PAGE.margin, 34, { characterSpacing: 1.6 });
+    .text('PROTECT SENTINEL', PAGE.margin + iconSize + 8, 34, { characterSpacing: 1.6 });
 
   doc.font('Helvetica-Bold').fontSize(23).fillColor('#ffffff').text(meta.title, PAGE.margin, 52);
 

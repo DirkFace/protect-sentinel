@@ -97,6 +97,16 @@ const Schema = z.object({
   MORNING_SUMMARY: bool.default('true'),
   /** HA notify service to push the brief to, e.g. "mobile_app_johns_phone". Empty disables. Needs hassio_api: true. */
   NOTIFY_SERVICE: z.string().default(''),
+  /**
+   * Push notifications escalate by severity: quiet/routine/flagged nights
+   * get a short headline only (no raw incident detail — the point is
+   * "check the report", not a data dump on the lock screen). A sensitive-
+   * zone alert is the one exception, since it's urgent enough to be worth
+   * seeing immediately without opening anything — this includes the
+   * actual time/camera in the push itself. Set false to keep even that
+   * one to a generic headline.
+   */
+  PUSH_FULL_DETAIL_ON_URGENT: bool.default('true'),
 
   // ── MQTT entities ───────────────────────────────────────────────────────
   /** MQTT broker host, e.g. the Mosquitto add-on's hostname. Blank disables entity publishing entirely. */

@@ -52,6 +52,7 @@ const env = {
   TREND_LOOKBACK_NIGHTS: String(options.trend_lookback_nights ?? 14),
   MORNING_SUMMARY: String(options.morning_summary ?? true),
   NOTIFY_SERVICE: String(options.notify_service ?? ""),
+  PUSH_FULL_DETAIL_ON_URGENT: String(options.push_full_detail_on_urgent ?? true),
 
   // ── MQTT entities (new in v2) ────────────────────────────────────────
   MQTT_HOST: String(options.mqtt_host ?? ""),

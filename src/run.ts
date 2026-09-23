@@ -222,7 +222,7 @@ export async function runOnce(cfg: Config, opts: RunOptions = {}): Promise<RunRe
   }
 
   if (cfg.NOTIFY_SERVICE && data.totals.detections > 0) {
-    const push = briefToPush(data, scored, watchMatches);
+    const push = briefToPush(data, scored, watchMatches, cfg.PUSH_FULL_DETAIL_ON_URGENT);
     await notifyHass(cfg.NOTIFY_SERVICE, push.title, push.message);
   }
 

@@ -344,18 +344,31 @@ Set `notify_service` to a Home Assistant notify target (the part after
 **Settings → Devices & Services → Mobile App**, or
 **Developer Tools → Actions** and search "notify"). `homeassistant_api` is
 already enabled in this add-on's manifest, so no extra HA-side permission
-setup is needed.
+setup is needed. This uses Home Assistant's own notify service either way,
+so it works the same on iOS and Android — the Companion App on each
+platform handles the actual delivery.
 
-The notification is deliberately short — a lock screen has far less room
-than the PDF or email. It's either:
+The notification escalates by severity rather than dumping data onto a
+lock screen — its job is "should I open this", not a mirror of the PDF:
 
-- **"All quiet overnight"** with a one-line detection count, or
-- A headline count plus the one or two things actually worth a look, each
-  condensed to a short phrase (e.g. `03:42 Front: unusual timing`).
+| Situation | Title | Message |
+|---|---|---|
+| Nothing detected | All quiet overnight | No detections. |
+| Detections, nothing unusual | All quiet overnight | Detection count, nothing unusual. |
+| Notable incidents, no watchlist match | *N* incidents worth a look, out of *N* total | Check the report when you get a chance. |
+| Watchlist match (not a sensitive zone) | *N* flagged detection(s) overnight | Check the report for details. |
+| Sensitive zone activity | URGENT — sensitive zone activity | The actual time/camera, by default |
+
+Only the sensitive-zone tier includes real incident detail in the push
+itself (time, camera, detection type) — it's urgent enough to be worth
+seeing immediately without opening anything. Set
+`push_full_detail_on_urgent: false` to keep even that one down to a
+generic "Check the report now." instead, if you'd rather nothing but a
+severity level ever appears on your lock screen.
 
 Full detail — every incident, every reason, cross-camera trails — is still
-in the PDF and the morning email; the push is just the "should I open this"
-signal.
+in the PDF and the morning email; the push is just the "should I open
+this" signal.
 
 ## MQTT entities
 
@@ -477,6 +490,7 @@ Leave `mail_to` blank to disable email.
 | `trend_lookback_nights` | `14` | See [Trend history](#trend-history-and-the-morning-brief) |
 | `morning_summary` | `true` | Adds the brief to the top of the email body |
 | `notify_service` | — | See [Push notifications](#push-notifications) |
+| `push_full_detail_on_urgent` | `true` | See [Push notifications](#push-notifications) |
 
 ### MQTT
 

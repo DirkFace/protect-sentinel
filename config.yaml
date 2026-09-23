@@ -1,5 +1,5 @@
 name: "Protect Sentinel"
-version: "0.6.4"
+version: "0.7.0"
 slug: protect_sentinel
 description: "Nightly PDF reports of UniFi Protect smart-detection events, with watchlists, a morning brief and an ingress panel."
 url: "https://github.com/DirkFace/protect-sentinel"
@@ -95,6 +95,13 @@ options:
   # Home Assistant notify service to push the brief to, e.g.
   # "mobile_app_johns_phone" (the part after "notify."). Leave blank to disable.
   notify_service: ""
+  # Push notifications escalate by severity: quiet/routine/flagged nights get
+  # a short headline only (no timestamps/camera names — the point is "check
+  # the report", not a data dump on your lock screen). A sensitive-zone
+  # alert is urgent enough to be worth seeing immediately without opening
+  # anything, so by default it's the one exception and includes the actual
+  # time/camera. Set false to keep even that one to a generic headline.
+  push_full_detail_on_urgent: true
 
   # ── MQTT entities ──────────────────────────────────────────────────────
   # Publishes state as HA entities via MQTT auto-discovery, e.g. sensors for
@@ -150,6 +157,7 @@ schema:
   trend_lookback_nights: int(0,)
   morning_summary: bool
   notify_service: str?
+  push_full_detail_on_urgent: bool
 
   mqtt_host: str?
   mqtt_port: port

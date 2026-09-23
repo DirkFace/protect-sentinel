@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.0
+
+- Redesigned push notifications to escalate by severity instead of
+  listing raw incident data. Quiet, routine, "worth a look", and flagged-
+  watchlist nights now get a short headline plus a generic "check the
+  report" nudge, rather than timestamps and camera names crowding a phone
+  lock screen. Sensitive-zone alerts are the one exception — urgent
+  enough to include the actual time/camera by default — controllable via
+  the new `push_full_detail_on_urgent` option.
+
 ## 0.6.4
 
 - Dropped "UNIFI PROTECT" from the PDF's own header — to avoid any

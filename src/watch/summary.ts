@@ -1,7 +1,7 @@
 import type { ReportData } from '../report/aggregate.js';
 import type { ScoredIncident, WatchMatch, NightBrief, CrossCameraTrail } from './types.js';
 import { fmtTime, fmtTimeShort } from '../report/window.js';
-import { describeWatchMatch, shortMatchTag } from './format.js';
+import { describeWatchMatch } from './format.js';
 
 export function buildNightBrief(
   data: ReportData,
@@ -70,15 +70,20 @@ export function briefToText(brief: NightBrief): string {
 
 /**
  * A compact summary for a push notification, which has none of the room a
- * PDF or email does — most phone lock screens truncate well before the
- * point buildNightBrief's bullets end, which just showed as clutter. This
- * says either "all quiet" or names the one or two things actually worth a
- * look, each condensed to a short phrase, and leaves everything else for the
- * PDF/email. Trails aren't included here — a trail is corroborating detail
- * for something already listed above (a watch match or a notable incident),
- * not a separate headline of its own.
+ * PDF or email does. Escalates by severity rather than dumping data:
+ * quiet/routine/flagged nights get a short headline plus a generic nudge
+ * to check the report, not an itemised list of timestamps and camera
+ * names — that's what cluttered a phone lock screen. Only a sensitive-
+ * zone alert breaks that rule, since it's urgent enough to be worth
+ * seeing immediately without opening anything; `fullDetail` controls
+ * whether that one tier includes the actual time/camera, on by default.
  */
-export function briefToPush(data: ReportData, scored: ScoredIncident[], watchMatches: WatchMatch[]): { title: string; message: string } {
+export function briefToPush(
+  data: ReportData,
+  scored: ScoredIncident[],
+  watchMatches: WatchMatch[],
+  fullDetail: boolean,
+): { title: string; message: string } {
   const zone = data.window.zone;
 
   if (data.totals.detections === 0) {
@@ -87,6 +92,10 @@ export function briefToPush(data: ReportData, scored: ScoredIncident[], watchMat
 
   const zoneMatches = watchMatches.filter((m) => m.rule.kind === 'sensitive-zone');
   if (zoneMatches.length > 0) {
+    const title = 'URGENT — sensitive zone activity';
+    if (!fullDetail) {
+      return { title, message: 'Check the report now.' };
+    }
     const seen = new Set<string>();
     const items: string[] = [];
     for (const m of zoneMatches) {
@@ -97,27 +106,14 @@ export function briefToPush(data: ReportData, scored: ScoredIncident[], watchMat
       if (items.length >= 2) break;
     }
     const extra = zoneMatches.length > items.length ? ` (+${zoneMatches.length - items.length} more)` : '';
-    return {
-      title: `URGENT — sensitive zone activity`,
-      message: items.join(' · ') + extra,
-    };
+    return { title, message: items.join(' · ') + extra };
   }
 
   const otherMatches = watchMatches.filter((m) => m.rule.kind !== 'sensitive-zone');
   if (otherMatches.length > 0) {
-    const seen = new Set<string>();
-    const items: string[] = [];
-    for (const m of otherMatches) {
-      const tag = `${shortMatchTag(m)} · ${m.detection.cameraName}`;
-      if (seen.has(tag)) continue;
-      seen.add(tag);
-      items.push(tag);
-      if (items.length >= 2) break;
-    }
-    const extra = otherMatches.length > items.length ? ` (+${otherMatches.length - items.length} more)` : '';
     return {
       title: `${otherMatches.length} flagged detection${otherMatches.length === 1 ? '' : 's'} overnight`,
-      message: items.join(' · ') + extra,
+      message: 'Check the report for details.',
     };
   }
 
@@ -129,24 +125,10 @@ export function briefToPush(data: ReportData, scored: ScoredIncident[], watchMat
     };
   }
 
-  const top = significant.slice(0, 2);
-  const items = top.map((s) => `${fmtTimeShort(s.incident.start, zone)} ${s.incident.cameraName}: ${shortReason(s)}`);
-  const extra = significant.length > top.length ? ` (+${significant.length - top.length} more)` : '';
   return {
     title: `${significant.length} incident${significant.length === 1 ? '' : 's'} worth a look, out of ${data.totals.incidents} total`,
-    message: items.join(' · ') + extra,
+    message: 'Check the report when you get a chance.',
   };
-}
-
-/** Condenses a scored incident's leading reason into a short push-friendly phrase. */
-function shortReason(s: ScoredIncident): string {
-  const r = s.reasons.find(Boolean) ?? '';
-  if (r.includes('unusual for this time')) return 'unusual timing';
-  if (r.includes('quieter-than-usual')) return 'quiet-hour activity';
-  if (r.includes('high-confidence')) return 'high-confidence';
-  if (r.includes('sustained')) return 'sustained activity';
-  if (r.includes('clustered')) return 'repeated activity';
-  return 'notable activity';
 }
 
 /** Small HTML block to sit above the existing email summary, before the PDF attachment note. */

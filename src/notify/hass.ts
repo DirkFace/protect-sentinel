@@ -8,9 +8,16 @@ import { log } from '../logger.js';
  * present, so it's safe to call unconditionally.
  *
  * `service` is the part after "notify." — e.g. "mobile_app_johns_phone" or
- * plain "notify" to fan out to every configured notify target.
+ * plain "notify" to fan out to every configured notify target. `extraData`
+ * is passed through verbatim as the Companion App's `data` payload (e.g.
+ * critical-alert flags) — see notify/critical.ts.
  */
-export async function notifyHass(service: string, title: string, message: string): Promise<void> {
+export async function notifyHass(
+  service: string,
+  title: string,
+  message: string,
+  extraData?: Record<string, unknown>,
+): Promise<void> {
   const token = process.env.SUPERVISOR_TOKEN;
   if (!token) {
     log.debug('SUPERVISOR_TOKEN not set (homeassistant_api not enabled?) — skipping HA notification');
@@ -25,7 +32,7 @@ export async function notifyHass(service: string, title: string, message: string
         Authorization: `Bearer ${token}`,
         'content-type': 'application/json',
       },
-      body: JSON.stringify({ title, message }),
+      body: JSON.stringify(extraData ? { title, message, data: extraData } : { title, message }),
     });
     if (!res.ok) {
       log.warn(`HA notify.${service} failed: HTTP ${res.status} ${await res.text().catch(() => '')}`);

@@ -53,6 +53,7 @@ const env = {
   MORNING_SUMMARY: String(options.morning_summary ?? true),
   NOTIFY_SERVICE: String(options.notify_service ?? ""),
   PUSH_FULL_DETAIL_ON_URGENT: String(options.push_full_detail_on_urgent ?? true),
+  PUSH_CRITICAL_ON_URGENT: String(options.push_critical_on_urgent ?? false),
 
   // ── MQTT entities (new in v2) ────────────────────────────────────────
   MQTT_HOST: String(options.mqtt_host ?? ""),

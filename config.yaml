@@ -1,5 +1,5 @@
 name: "Protect Sentinel"
-version: "0.7.0"
+version: "0.8.0"
 slug: protect_sentinel
 description: "Nightly PDF reports of UniFi Protect smart-detection events, with watchlists, a morning brief and an ingress panel."
 url: "https://github.com/DirkFace/protect-sentinel"
@@ -102,6 +102,12 @@ options:
   # anything, so by default it's the one exception and includes the actual
   # time/camera. Set false to keep even that one to a generic headline.
   push_full_detail_on_urgent: true
+  # Sends the sensitive-zone-alert push as a "critical" notification that
+  # bypasses silent/Do Not Disturb — same toggle works on iOS and Android,
+  # though each needs a one-time permission granted on the phone itself
+  # (see the Push notifications section in DOCS.md). Off by default since
+  # this can make the phone ring, unlike the option above.
+  push_critical_on_urgent: false
 
   # ── MQTT entities ──────────────────────────────────────────────────────
   # Publishes state as HA entities via MQTT auto-discovery, e.g. sensors for
@@ -158,6 +164,7 @@ schema:
   morning_summary: bool
   notify_service: str?
   push_full_detail_on_urgent: bool
+  push_critical_on_urgent: bool
 
   mqtt_host: str?
   mqtt_port: port

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.8.0
+
+- Added `push_critical_on_urgent`, sending sensitive-zone-alert pushes as
+  critical notifications — bypassing silent mode/Do Not Disturb and
+  showing at the top of the lock screen — on both iOS and Android from
+  one toggle. Off by default. Requires a one-time permission granted on
+  the phone itself for the DND bypass to actually take effect (see
+  DOCS.md); without it, the push still arrives louder and more
+  immediately, just not guaranteed to break through Do Not Disturb.
+
 ## 0.7.0
 
 - Redesigned push notifications to escalate by severity instead of

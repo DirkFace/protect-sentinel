@@ -83,18 +83,18 @@ export function briefToPush(
   scored: ScoredIncident[],
   watchMatches: WatchMatch[],
   fullDetail: boolean,
-): { title: string; message: string } {
+): { title: string; message: string; urgent: boolean } {
   const zone = data.window.zone;
 
   if (data.totals.detections === 0) {
-    return { title: 'All quiet overnight', message: 'No detections.' };
+    return { title: 'All quiet overnight', message: 'No detections.', urgent: false };
   }
 
   const zoneMatches = watchMatches.filter((m) => m.rule.kind === 'sensitive-zone');
   if (zoneMatches.length > 0) {
     const title = 'URGENT — sensitive zone activity';
     if (!fullDetail) {
-      return { title, message: 'Check the report now.' };
+      return { title, message: 'Check the report now.', urgent: true };
     }
     const seen = new Set<string>();
     const items: string[] = [];
@@ -106,7 +106,7 @@ export function briefToPush(
       if (items.length >= 2) break;
     }
     const extra = zoneMatches.length > items.length ? ` (+${zoneMatches.length - items.length} more)` : '';
-    return { title, message: items.join(' · ') + extra };
+    return { title, message: items.join(' · ') + extra, urgent: true };
   }
 
   const otherMatches = watchMatches.filter((m) => m.rule.kind !== 'sensitive-zone');
@@ -114,6 +114,7 @@ export function briefToPush(
     return {
       title: `${otherMatches.length} flagged detection${otherMatches.length === 1 ? '' : 's'} overnight`,
       message: 'Check the report for details.',
+      urgent: false,
     };
   }
 
@@ -122,12 +123,14 @@ export function briefToPush(
     return {
       title: 'All quiet overnight',
       message: `${data.totals.detections} detection${data.totals.detections === 1 ? '' : 's'}, nothing unusual.`,
+      urgent: false,
     };
   }
 
   return {
     title: `${significant.length} incident${significant.length === 1 ? '' : 's'} worth a look, out of ${data.totals.incidents} total`,
     message: 'Check the report when you get a chance.',
+    urgent: false,
   };
 }
 

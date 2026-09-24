@@ -107,6 +107,15 @@ const Schema = z.object({
    * one to a generic headline.
    */
   PUSH_FULL_DETAIL_ON_URGENT: bool.default('true'),
+  /**
+   * Sends the sensitive-zone-alert push as a "critical" notification —
+   * bypasses silent/Do Not Disturb and shows at the top of the lock
+   * screen, on both iOS and Android (see notify/critical.ts for the
+   * platform details and the one-time phone-side permission each needs).
+   * Off by default since it's a bigger behavior change than the other
+   * push options — it can make the phone ring.
+   */
+  PUSH_CRITICAL_ON_URGENT: bool.default('false'),
 
   // ── MQTT entities ───────────────────────────────────────────────────────
   /** MQTT broker host, e.g. the Mosquitto add-on's hostname. Blank disables entity publishing entirely. */

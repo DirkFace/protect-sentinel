@@ -17,6 +17,7 @@ import { scoreIncident } from './watch/significance.js';
 import { recordNight, baselineForHour, describeRepeatPattern } from './watch/trends.js';
 import { buildNightBrief, briefToText, briefToHtml, briefToPush } from './watch/summary.js';
 import { notifyHass } from './notify/hass.js';
+import { CRITICAL_PUSH_DATA } from './notify/critical.js';
 import { publishNightState } from './notify/mqtt.js';
 import { writeLastState } from './server/state.js';
 import type { ScoredIncident, WatchMatch } from './watch/types.js';
@@ -223,7 +224,8 @@ export async function runOnce(cfg: Config, opts: RunOptions = {}): Promise<RunRe
 
   if (cfg.NOTIFY_SERVICE && data.totals.detections > 0) {
     const push = briefToPush(data, scored, watchMatches, cfg.PUSH_FULL_DETAIL_ON_URGENT);
-    await notifyHass(cfg.NOTIFY_SERVICE, push.title, push.message);
+    const critical = push.urgent && cfg.PUSH_CRITICAL_ON_URGENT ? CRITICAL_PUSH_DATA : undefined;
+    await notifyHass(cfg.NOTIFY_SERVICE, push.title, push.message, critical);
   }
 
   if (!opts.demo) {

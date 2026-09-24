@@ -366,6 +366,30 @@ seeing immediately without opening anything. Set
 generic "Check the report now." instead, if you'd rather nothing but a
 severity level ever appears on your lock screen.
 
+### Critical alerts for sensitive-zone activity
+
+Set `push_critical_on_urgent: true` to send the sensitive-zone-alert push
+as a **critical notification** — one that bypasses silent mode and Do Not
+Disturb, and shows at the top of the lock screen. This is off by default,
+since it's a bigger behavior change than the option above (it can make the
+phone ring); everything else still uses an ordinary notification.
+
+One toggle covers both iOS and Android, because the Companion App on each
+platform only reads the fields meant for it and ignores the rest — the
+add-on sends both in the same push. What it can't do from here: on **both**
+platforms, actually bypassing Do Not Disturb needs a one-time permission
+granted on the phone itself, not just this setting:
+
+- **iOS** — Settings → Notifications → Home Assistant → enable
+  **Critical Alerts**.
+- **Android** — in the Home Assistant app's notification settings, find the
+  **"alarm_stream"** channel and allow it to override Do Not Disturb.
+
+Without that step, this still gets a louder, more immediate notification —
+just not a guaranteed bypass. See
+[Home Assistant's own critical-notifications docs](https://companion.home-assistant.io/docs/notifications/critical-notifications)
+for the full platform details.
+
 Full detail — every incident, every reason, cross-camera trails — is still
 in the PDF and the morning email; the push is just the "should I open
 this" signal.
@@ -491,6 +515,7 @@ Leave `mail_to` blank to disable email.
 | `morning_summary` | `true` | Adds the brief to the top of the email body |
 | `notify_service` | — | See [Push notifications](#push-notifications) |
 | `push_full_detail_on_urgent` | `true` | See [Push notifications](#push-notifications) |
+| `push_critical_on_urgent` | `false` | See [Critical alerts for sensitive-zone activity](#critical-alerts-for-sensitive-zone-activity) |
 
 ### MQTT
 

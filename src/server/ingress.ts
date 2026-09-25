@@ -87,20 +87,34 @@ async function renderIndex(res: http.ServerResponse, cfg: Config, base: string):
   const state = await readLastState(cfg);
   const statusBar = renderStatusBar(state, cfg);
 
-  const rows = files
-    .map((f) => {
-      const date = f.replace('sentinel-', '').replace('.pdf', '');
-      // Deliberately no target="_blank" — that breaks out of the ingress
-      // iframe into a brand-new top-level browsing context (on the HA
-      // companion app, that means the system browser), which has no
-      // ingress session at all and gets a 401. A plain same-context
-      // navigation keeps the authenticated ingress session intact. The
-      // `download` attribute (plus the server's attachment header) makes
-      // this a download rather than a navigation at all — see the /pdf/
-      // handler above for why.
-      return `<tr><td>${date}</td><td><a href="${base}/pdf/${encodeURIComponent(f)}" download="${f}">Download report</a></td></tr>`;
-    })
-    .join('');
+  const rows = (
+    await Promise.all(
+      files.map(async (f) => {
+        const date = f.replace('sentinel-', '').replace('.pdf', '');
+        // Best-effort: a report written before this existed (or if the
+        // sidecar write ever failed) just shows with no summary line.
+        const summary = await fs
+          .readFile(path.resolve(cfg.OUT_DIR, `sentinel-${date}.json`), 'utf8')
+          .then((raw) => (JSON.parse(raw) as { headline?: string }).headline)
+          .catch(() => null);
+        // Deliberately no target="_blank" — that breaks out of the ingress
+        // iframe into a brand-new top-level browsing context (on the HA
+        // companion app, that means the system browser), which has no
+        // ingress session at all and gets a 401. A plain same-context
+        // navigation keeps the authenticated ingress session intact. The
+        // `download` attribute (plus the server's attachment header) makes
+        // this a download rather than a navigation at all — see the /pdf/
+        // handler above for why.
+        return `<div class="report">
+      <div class="report-row">
+        <span class="report-date">${date}</span>
+        <a href="${base}/pdf/${encodeURIComponent(f)}" download="${f}">Download report</a>
+      </div>
+      ${summary ? `<p class="report-summary">${escapeHtml(summary)}</p>` : ''}
+    </div>`;
+      }),
+    )
+  ).join('');
 
   const html = `<!doctype html>
 <html><head><meta charset="utf-8"><title>${escapeHtml(cfg.REPORT_TITLE)}</title>
@@ -110,8 +124,11 @@ async function renderIndex(res: http.ServerResponse, cfg: Config, base: string):
          background: #0f1420; color: #e4e8f1; }
   h1 { font-size: 18px; font-weight: 600; margin: 0 0 4px; }
   p.sub { color: #8b93a7; margin: 0 0 24px; font-size: 13px; }
-  table { border-collapse: collapse; width: 100%; max-width: 640px; }
-  td { padding: 8px 12px 8px 0; border-bottom: 1px solid #232a3b; font-size: 14px; }
+  .reports { width: 100%; max-width: 640px; }
+  .report { padding: 10px 0; border-bottom: 1px solid #232a3b; }
+  .report-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; font-size: 14px; }
+  .report-date { color: #e4e8f1; }
+  .report-summary { margin: 4px 0 0; font-size: 12px; color: #8b93a7; line-height: 1.4; }
   a { color: #6ea8fe; text-decoration: none; }
   a:hover { text-decoration: underline; }
   button { background: #2563eb; color: white; border: none; padding: 10px 16px; border-radius: 6px;
@@ -137,7 +154,7 @@ async function renderIndex(res: http.ServerResponse, cfg: Config, base: string):
   <p class="sub">${files.length} report${files.length === 1 ? '' : 's'} on file, retained ${cfg.RETAIN_DAYS || '∞'} days</p>
   ${statusBar}
   <form method="post" action="${base}/run"><button type="submit">Run report now</button></form>
-  <table>${rows || '<tr><td class="empty">No reports yet.</td></tr>'}</table>
+  <div class="reports">${rows || '<p class="empty">No reports yet.</p>'}</div>
 </body></html>`;
 
   res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });

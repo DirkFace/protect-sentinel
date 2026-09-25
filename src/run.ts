@@ -210,6 +210,15 @@ export async function runOnce(cfg: Config, opts: RunOptions = {}): Promise<RunRe
   await fs.writeFile(pdfPath, pdf);
   log.info(`Wrote ${pdfPath} (${(pdf.length / 1024).toFixed(0)} KB)`);
 
+  // Small sidecar so the ingress panel can show a one-line summary next to
+  // each past report without re-reading (or re-parsing) the PDF itself.
+  // Best-effort — a report list entry just has no summary line if this is
+  // missing, e.g. for PDFs written before this existed.
+  const summaryPath = path.resolve(outDir, `sentinel-${window.reportDate}.json`);
+  await fs.writeFile(summaryPath, JSON.stringify({ headline: brief.headline })).catch((err) => {
+    log.warn(`Could not write report summary sidecar: ${(err as Error).message}`);
+  });
+
   let emailed = false;
   const shouldEmail = opts.email !== false && cfg.MAIL_TO.length > 0;
   const emailBrief = cfg.MORNING_SUMMARY ? { text: briefToText(brief), html: briefToHtml(brief) } : undefined;
@@ -317,6 +326,9 @@ async function prune(dir: string, retainDays: number): Promise<void> {
     const stat = await fs.stat(full);
     if (stat.mtimeMs < cutoff) {
       await fs.unlink(full);
+      // Remove the matching summary sidecar too, or it'd just accumulate
+      // as an orphan forever once its PDF is gone.
+      await fs.unlink(full.replace(/\.pdf$/, '.json')).catch(() => {});
       removed++;
     }
   }

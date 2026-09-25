@@ -429,6 +429,12 @@ embedded PDF only ever shows page 1 and won't scroll further; a download
 hands the finished file to the OS's own PDF viewer instead, fully outside
 any iframe, so multi-page scrolling works properly on every platform.
 
+Each report in the list also shows a one-line summary underneath its date —
+the same headline used in the morning brief and push notification (e.g.
+"3 incidents worth a look out of 9 total.") — so you can find a specific
+past night without opening each PDF to remember what it was. Reports
+written before this existed just show with no summary line.
+
 ### Status bar
 
 A small card above the "Run report now" button shows the most recent run's

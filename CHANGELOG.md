@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.9.0
+
+- The ingress panel's report list now shows a one-line summary under each
+  PDF's date — the same headline used in the morning brief and push
+  notification (e.g. "3 incidents worth a look out of 9 total.") — so a
+  specific past night is easy to find without opening each report to
+  remember what it was. Written as a small sidecar file alongside each
+  PDF; older reports just show with no summary line. Restyled the list
+  from a table to stacked cards so the extra line wraps cleanly on a
+  phone screen as well as desktop.
+
 ## 0.8.0
 
 - Added `push_critical_on_urgent`, sending sensitive-zone-alert pushes as

@@ -1,5 +1,5 @@
 name: "Protect Sentinel"
-version: "0.9.0"
+version: "0.9.1"
 slug: protect_sentinel
 description: "Nightly PDF reports of UniFi Protect smart-detection events, with watchlists, a morning brief and an ingress panel."
 url: "https://github.com/DirkFace/protect-sentinel"

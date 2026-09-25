@@ -8,7 +8,7 @@ RUN npm run build && npm prune --omit=dev
 
 FROM node:22-alpine
 
-LABEL io.hass.version="0.9.0" \
+LABEL io.hass.version="0.9.1" \
       io.hass.type="addon" \
       io.hass.arch="aarch64|amd64"
 

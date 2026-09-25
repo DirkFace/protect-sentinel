@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.1
+
+- Replaced the README's sample screenshots (shown on the GitHub page and
+  the Home Assistant Info tab) — they still had the old "Night Watch"
+  branding. Regenerated from a real report: the summary page now shows
+  the Sentinel icon/name and a sensitive-zone urgent banner, and the
+  stills page shows the matching orange-highlighted urgent detection.
+
 ## 0.9.0
 
 - The ingress panel's report list now shows a one-line summary under each

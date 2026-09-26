@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.2
+
+- Swapped the README's sample screenshots again for a more eventful
+  report: the summary page now shows all three highlight banners at once
+  (urgent sensitive-zone, watchlist match, and cross-camera trail) plus
+  the full detections chart, and the stills page shows all eleven
+  detection thumbnails across three cameras, including the highlighted
+  watchlist match.
+
 ## 0.9.1
 
 - Replaced the README's sample screenshots (shown on the GitHub page and

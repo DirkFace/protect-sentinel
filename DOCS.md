@@ -608,3 +608,10 @@ configuration problem.
 Built on top of the original
 [protect-night-watch](https://github.com/WispAyr/protect-night-watch)
 project, with a substantial watch/notification/ingress layer added on top.
+
+## Disclaimer
+
+Protect Sentinel is an independent community project. It is not affiliated
+with, endorsed by, or supported by Ubiquiti Inc. "UniFi" and "UniFi
+Protect" are trademarks of Ubiquiti Inc., used here only to describe what
+this add-on works with.

@@ -29,6 +29,11 @@ See **[CHANGELOG.md](CHANGELOG.md)** for version history.
 
 ---
 
+Protect Sentinel is an independent community project. It is not affiliated
+with, endorsed by, or supported by Ubiquiti Inc. "UniFi" and "UniFi
+Protect" are trademarks of Ubiquiti Inc., used here only to describe what
+this add-on works with.
+
 Originally based on [protect-night-watch](https://github.com/WispAyr/protect-night-watch)
 by WispAyr (MIT licensed), substantially extended with watchlists,
 sensitive-zone alerts, cross-camera trail tracing, MQTT entities, and more.

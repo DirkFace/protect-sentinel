@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.3
+
+- Added a "not affiliated with Ubiquiti" disclaimer to the README and
+  DOCS.md, ahead of wider public release.
+
 ## 0.9.2
 
 - Swapped the README's sample screenshots again for a more eventful

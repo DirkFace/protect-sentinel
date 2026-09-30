@@ -1,6 +1,7 @@
 import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { DateTime } from 'luxon';
 import type { Config } from '../config.js';
 import { log } from '../logger.js';
 import { runOnce } from '../run.js';
@@ -29,6 +30,24 @@ export function startIngressServer(cfg: Config, port: number): void {
   server.listen(port, () => log.info(`Ingress panel listening on :${port}`));
 }
 
+/**
+ * Reads and parses a POST body as `application/x-www-form-urlencoded` — the
+ * only body shape this server ever needs to handle (a plain HTML form
+ * submit, no JS/fetch involved). Capped at 8KB; this form only ever carries
+ * two short datetime strings, so anything larger is either a mistake or
+ * abuse, not a legitimate request.
+ */
+async function readFormBody(req: http.IncomingMessage): Promise<URLSearchParams> {
+  const chunks: Buffer[] = [];
+  let size = 0;
+  for await (const chunk of req) {
+    size += (chunk as Buffer).length;
+    if (size > 8192) throw new Error('Request body too large');
+    chunks.push(chunk as Buffer);
+  }
+  return new URLSearchParams(Buffer.concat(chunks).toString('utf8'));
+}
+
 async function handle(req: http.IncomingMessage, res: http.ServerResponse, cfg: Config): Promise<void> {
   const base = (req.headers['x-ingress-path'] as string | undefined) ?? '';
   const url = new URL(req.url ?? '/', 'http://internal');
@@ -38,9 +57,38 @@ async function handle(req: http.IncomingMessage, res: http.ServerResponse, cfg: 
     return renderIndex(res, cfg, base);
   }
   if (rel === '/run' && req.method === 'POST') {
-    log.info('Ingress: manual run requested');
+    // A plain "Run report now" submit has no body at all (the button is a
+    // bare <form method="post">, no inputs) — the ad-hoc custom-range form
+    // is the same endpoint with `start`/`end` fields added. Reading an
+    // empty body just yields empty params, so both forms are handled by
+    // the exact same code path below without needing to distinguish them.
+    let range: { startMs: number; endMs: number } | undefined;
     try {
-      const r = await runOnce(cfg, {});
+      const params = await readFormBody(req);
+      const startLocal = params.get('start');
+      const endLocal = params.get('end');
+      if (startLocal && endLocal) {
+        const startMs = DateTime.fromISO(startLocal, { zone: cfg.TZ_NAME }).toMillis();
+        const endMs = DateTime.fromISO(endLocal, { zone: cfg.TZ_NAME }).toMillis();
+        if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) {
+          res.writeHead(302, {
+            location: `${base}/?ran=0&error=${encodeURIComponent('Invalid custom range — end must be after start')}`,
+          });
+          res.end();
+          return;
+        }
+        range = { startMs, endMs };
+        log.info(`Ingress: ad-hoc range requested ${startLocal} -> ${endLocal} (${cfg.TZ_NAME})`);
+      } else {
+        log.info('Ingress: manual run requested');
+      }
+    } catch (err) {
+      res.writeHead(302, { location: `${base}/?ran=0&error=${encodeURIComponent((err as Error).message)}` });
+      res.end();
+      return;
+    }
+    try {
+      const r = await runOnce(cfg, { range });
       res.writeHead(302, { location: `${base}/?ran=1&detections=${r.detections}` });
       res.end();
     } catch (err) {
@@ -134,6 +182,8 @@ async function renderIndex(res: http.ServerResponse, cfg: Config, base: string):
   button { background: #2563eb; color: white; border: none; padding: 10px 16px; border-radius: 6px;
            font-size: 14px; cursor: pointer; margin-bottom: 20px; }
   button:hover { background: #1d4ed8; }
+  button.secondary { background: #374151; }
+  button.secondary:hover { background: #4b5563; }
   .empty { color: #8b93a7; font-size: 14px; }
   .status { border-radius: 8px; padding: 14px 16px; margin: 0 0 20px; max-width: 640px; }
   .status-title { font-size: 13px; font-weight: 700; letter-spacing: 0.02em; margin: 0 0 4px; }
@@ -148,12 +198,31 @@ async function renderIndex(res: http.ServerResponse, cfg: Config, base: string):
   .status-danger { background: #2a1414; border: 1px solid #b91c1c; }
   .status-danger .status-title { color: #fca5a5; }
   .status-danger .status-detail { color: #dbb8b8; }
+  details.adhoc { margin-bottom: 20px; max-width: 640px; }
+  details.adhoc summary { cursor: pointer; color: #8b93a7; font-size: 13px; margin-bottom: 10px; }
+  details.adhoc summary:hover { color: #e4e8f1; }
+  .adhoc-form { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+  .adhoc-form label { font-size: 12px; color: #8b93a7; display: block; }
+  .adhoc-form input { background: #1c212c; color: #e4e8f1; border: 1px solid #232a3b; border-radius: 6px;
+    padding: 7px 8px; font-size: 13px; margin-top: 3px; }
+  .adhoc-hint { font-size: 11.5px; color: #8b93a7; margin: 6px 0 0; max-width: 560px; }
 </style></head>
 <body>
   <h1>${escapeHtml(cfg.REPORT_TITLE)}${cfg.SITE_NAME ? ` — ${escapeHtml(cfg.SITE_NAME)}` : ''}</h1>
   <p class="sub">${files.length} report${files.length === 1 ? '' : 's'} on file, retained ${cfg.RETAIN_DAYS || '∞'} days</p>
   ${statusBar}
   <form method="post" action="${base}/run"><button type="submit">Run report now</button></form>
+  <details class="adhoc">
+    <summary>Custom range (ad-hoc)</summary>
+    <form method="post" action="${base}/run" class="adhoc-form">
+      <label>Start<br><input type="datetime-local" name="start" required></label>
+      <label>End<br><input type="datetime-local" name="end" required></label>
+      <button type="submit" class="secondary">Run custom range</button>
+    </form>
+    <p class="adhoc-hint">Times are in ${escapeHtml(cfg.TZ_NAME)}. This is a one-off query — it does not
+      affect the scheduled overnight report, trend history, or the status card above; it just builds and
+      lists its own separate PDF below.</p>
+  </details>
   <div class="reports">${rows || '<p class="empty">No reports yet.</p>'}</div>
 </body></html>`;
 
@@ -169,7 +238,9 @@ async function renderIndex(res: http.ServerResponse, cfg: Config, base: string):
  * treatment, matching the PDF's urgent banner; a plain watchlist match gets
  * a milder amber treatment; a quiet night gets a calm, muted one. Sits in a
  * fixed spot above the report list so it doesn't get crowded out as PDFs
- * accumulate underneath.
+ * accumulate underneath. Never reflects an ad-hoc run — see the `isAdhoc`
+ * guard in run.ts, which deliberately skips writing this state file for
+ * ad-hoc queries so this card always shows the real last scheduled run.
  */
 function renderStatusBar(state: NightState | null, cfg: Config): string {
   if (!state) {

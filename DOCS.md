@@ -65,31 +65,37 @@ sidebar panel lets you browse past reports and trigger a run on demand.
 
 Two ways to get this onto your system, depending on where you got it from:
 
+> Home Assistant 2026.2 renamed **add-ons** to **apps** in the UI
+> (Settings → Apps, App Store) — this doc uses "app" for anything
+> navigational and "add-on" for the underlying repository/technical
+> terminology, which hasn't changed. If you're on an older version, read
+> "App"/"App Store" below as "Add-on"/"Add-on Store".
+
 **A — from a GitHub repository (recommended if you got a repo link):**
 
-1. In Home Assistant, go to **Settings → Add-ons → Add-on Store**, open the
+1. In Home Assistant, go to **Settings → Apps → App Store**, open the
    **⋮** menu (top right) → **Repositories**, and paste the repository's
    GitHub URL. (Or use the "Add repository to Home Assistant" link in the
    repo's README, which does this in one click.)
 2. Find **Protect Sentinel** under its own section in the store and
    click **Install**. This builds a small Docker image straight from the
    repo — it can take a couple of minutes the first time.
-3. Once installed, go to the add-on's **Info** tab and enable **"Show in
+3. Once installed, go to the app's **Info** tab and enable **"Show in
    sidebar"** if you'd like the ingress panel (see below) one click away.
 
 **B — from a local folder (if you have the files directly, no GitHub repo):**
 
 1. Copy this add-on's folder (as `protect_sentinel`, or any slug you
    prefer) into your `addons` share — usually reachable over Samba, or via
-   the **File editor** / **Studio Code Server** add-on if you don't have
+   the **File editor** / **Studio Code Server** app if you don't have
    Samba set up.
-2. In Home Assistant, go to **Settings → Add-ons → Add-on Store**, open the
+2. In Home Assistant, go to **Settings → Apps → App Store**, open the
    **⋮** menu (top right) and choose **Check for updates** / **Reload** so
    Supervisor picks up the new folder.
-3. Find **Protect Sentinel** under "Local add-ons" and click **Install**.
+3. Find **Protect Sentinel** under "Local apps" and click **Install**.
    This builds a small Docker image from the folder — it can take a couple
    of minutes the first time.
-4. Once installed, go to the add-on's **Info** tab and enable **"Show in
+4. Once installed, go to the app's **Info** tab and enable **"Show in
    sidebar"** if you'd like the ingress panel (see below) one click away.
 
 ### 2. Configure the essentials
@@ -577,13 +583,13 @@ image from the folder. To be certain of a clean rebuild:
    manager (Explorer/Finder/Samba client) ever prompts "keep both" or "skip
    existing" during the copy — deleting first removes that risk entirely.
 2. Copy the fresh folder in as a clean copy.
-3. Fully **uninstall** the add-on in Home Assistant (not just stop it).
-4. In the Add-on Store, use **Reload**, then install again.
+3. Fully **uninstall** the app in Home Assistant (not just stop it).
+4. In the App Store, use **Reload**, then install again.
 5. Confirm the **Info** tab shows the version you expect before testing.
 
 If you're installed **from a GitHub repository** instead, this copy-conflict
 risk doesn't apply — Supervisor pulls a clean copy from the repo each time.
-Use **Check for updates** on the repository (⋮ menu in the Add-on Store), or
+Use **Check for updates** on the repository (⋮ menu in the App Store), or
 a full uninstall/reinstall if an update doesn't show up promptly.
 
 ### The container logs mention `SUPERVISOR_TOKEN`

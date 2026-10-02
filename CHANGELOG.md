@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.4
+
+- Updated DOCS.md's install and troubleshooting steps for Home Assistant
+  2026.2's rename of Add-ons to Apps (Settings → Apps → App Store). Added
+  an explanatory note for anyone on an older version. Generic references
+  to "the add-on" are left as-is — that's still the correct underlying
+  terminology (repository layout, config keys, slug), only the Settings
+  UI labels changed.
+
 ## 0.9.3
 
 - Added a "not affiliated with Ubiquiti" disclaimer to the README and

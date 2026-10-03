@@ -7,7 +7,7 @@ import { ProtectClient } from './protect/client.js';
 import type { Detection, ProtectCamera, ProtectEvent } from './protect/types.js';
 import { buildReportData, toDetections } from './report/aggregate.js';
 import { renderReport } from './report/pdf.js';
-import { buildNightWindow, lastNight, type NightWindow } from './report/window.js';
+import { adhocWindow, buildNightWindow, lastNight, type NightWindow } from './report/window.js';
 import { sendReport } from './mail/mailer.js';
 import { demoCameras, demoEvents, demoThumbnail } from './demo.js';
 import { parseWatchList } from './watch/rules.js';
@@ -25,6 +25,16 @@ import type { ScoredIncident, WatchMatch } from './watch/types.js';
 export interface RunOptions {
   /** yyyy-MM-dd morning the report is filed on. Defaults to today. */
   date?: string;
+  /**
+   * Explicit ad-hoc window (epoch ms), overriding `date` and the configured
+   * night_start/night_end entirely — "show me exactly this span" rather
+   * than "the configured overnight window for some date". Takes priority
+   * over `date` if both are somehow set. An ad-hoc run deliberately does
+   * NOT update trend history, the ingress status bar, or MQTT state (see
+   * the `isAdhoc` checks below) — those continue to reflect only the real
+   * scheduled/last-night run, never a one-off manual query.
+   */
+  range?: { startMs: number; endMs: number };
   demo?: boolean;
   email?: boolean;
   outDir?: string;
@@ -38,11 +48,14 @@ export interface RunResult {
 }
 
 export async function runOnce(cfg: Config, opts: RunOptions = {}): Promise<RunResult> {
-  const window: NightWindow = opts.date
-    ? buildNightWindow(opts.date, cfg.TZ_NAME, cfg.NIGHT_START, cfg.NIGHT_END)
-    : lastNight(cfg.TZ_NAME, cfg.NIGHT_START, cfg.NIGHT_END);
+  const isAdhoc = !!opts.range;
+  const window: NightWindow = opts.range
+    ? adhocWindow(opts.range.startMs, opts.range.endMs, cfg.TZ_NAME)
+    : opts.date
+      ? buildNightWindow(opts.date, cfg.TZ_NAME, cfg.NIGHT_START, cfg.NIGHT_END)
+      : lastNight(cfg.TZ_NAME, cfg.NIGHT_START, cfg.NIGHT_END);
 
-  log.info(`Window: ${window.startLabel} → ${window.endLabel} (${window.zone})`);
+  log.info(`Window: ${window.startLabel} → ${window.endLabel} (${window.zone})${isAdhoc ? ' [ad-hoc]' : ''}`);
 
   let cameras: ProtectCamera[];
   let events: ProtectEvent[];
@@ -169,6 +182,12 @@ export async function runOnce(cfg: Config, opts: RunOptions = {}): Promise<RunRe
     if (label) indexLabels.set(d.id, label);
   }
 
+  // Safe to call unconditionally, including for ad-hoc runs: recordNight/
+  // baselineForHour compare `date` keys as plain strings, and the synthetic
+  // `adhoc-...` reportDate always sorts after every real yyyy-MM-dd key —
+  // so a real night's baseline lookup (`n.date < reportDate`) never picks
+  // up an ad-hoc entry, while an ad-hoc run itself still benefits from a
+  // real historical baseline for its own significance scoring.
   const trendStore = await recordNight(outDir, window.reportDate, window.zone, detections);
   const trendNote = describeRepeatPattern(
     trendStore,
@@ -237,7 +256,12 @@ export async function runOnce(cfg: Config, opts: RunOptions = {}): Promise<RunRe
     await notifyHass(cfg.NOTIFY_SERVICE, push.title, push.message, critical);
   }
 
-  if (!opts.demo) {
+  if (!opts.demo && !isAdhoc) {
+    // Deliberately skipped for ad-hoc runs — an ad-hoc query is "show me
+    // this one span", not a new "last night" result, so it must never
+    // overwrite the status bar / MQTT sensors that the rest of the house
+    // (and e.g. a morning-briefing pipeline reading these entities) treats
+    // as the current real state.
     const nightState = {
       lastRunIso: new Date().toISOString(),
       incidents: data.totals.incidents,

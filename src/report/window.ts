@@ -58,6 +58,39 @@ export function lastNight(zone: string, nightStart: string, nightEnd: string): N
   return buildNightWindow(DateTime.now().setZone(zone).toISODate()!, zone, nightStart, nightEnd);
 }
 
+/**
+ * An arbitrary, explicitly-bounded window — NOT derived from `night_start`/
+ * `night_end` at all. Used for one-off ad-hoc runs (e.g. the ingress
+ * panel's custom-range form) where the caller wants "show me exactly this
+ * span", not "the configured overnight window for some date".
+ *
+ * `reportDate` gets a synthetic, non-ISO-date value (`adhoc-yyyyLLdd-HHmm-HHmm`)
+ * deliberately — it's used both as the PDF's filename stem and as the key
+ * into trend history (see `watch/trends.ts`). A synthetic key can never
+ * collide with a real calendar date, so an ad-hoc run never overwrites or
+ * gets mixed into a real night's trend baseline, and always gets its own
+ * distinctly-named PDF rather than clobbering a real dated report.
+ */
+export function adhocWindow(startMs: number, endMs: number, zone: string): NightWindow {
+  if (!Number.isFinite(startMs) || !Number.isFinite(endMs)) {
+    throw new Error('Ad-hoc window bounds must be finite timestamps');
+  }
+  if (endMs <= startMs) {
+    throw new Error('Ad-hoc window end must be after its start');
+  }
+  const start = DateTime.fromMillis(startMs, { zone });
+  const end = DateTime.fromMillis(endMs, { zone });
+
+  return {
+    reportDate: `adhoc-${start.toFormat('yyyyLLdd-HHmm')}-${end.toFormat('HHmm')}`,
+    startMs,
+    endMs,
+    zone,
+    startLabel: start.toFormat('ccc d LLL yyyy HH:mm'),
+    endLabel: end.toFormat('ccc d LLL yyyy HH:mm'),
+  };
+}
+
 export function fmtTime(ms: number, zone: string): string {
   return DateTime.fromMillis(ms, { zone }).toFormat('HH:mm:ss');
 }

@@ -346,10 +346,25 @@ function drawTrailsBanner(doc: Doc, data: ReportData, trails: CrossCameraTrail[]
 
   const w = contentWidth(doc);
   const pad = 12;
-  const lineH = 13;
+  const lineGap = 4;
   const headingH = 18;
   const footnoteH = 12;
-  const h = pad * 2 + headingH + trails.length * lineH + footnoteH;
+  const textWidth = w - pad * 2;
+
+  // A trail's camera chain (e.g. 4-5 hops) routinely wraps onto 2-3 lines at
+  // this width — measure each line's REAL rendered height instead of
+  // assuming one fixed-height line per trail. Getting this wrong is exactly
+  // what caused entries to overlap/garble each other before: the box was
+  // sized for N single lines while some trails silently wrapped to 2-3,
+  // and the next entry started drawing before the previous one finished.
+  doc.font('Helvetica').fontSize(8.5);
+  const lines = trails.map((t) => {
+    const text = `${fmtTime(t.start, data.window.zone)} — ${t.cameras.join(' -> ')}`;
+    const lineH = doc.heightOfString(text, { width: textWidth }) + lineGap;
+    return { text, lineH };
+  });
+  const linesH = lines.reduce((sum, l) => sum + l.lineH, 0);
+  const h = pad * 2 + headingH + linesH + footnoteH;
   ensureSpace(doc, h + 18);
 
   const top = doc.y;
@@ -361,15 +376,13 @@ function drawTrailsBanner(doc: Doc, data: ReportData, trails: CrossCameraTrail[]
     .text(`PROBABLE CROSS-CAMERA PATHS (${trails.length})`, PAGE.margin + pad, top + pad, { characterSpacing: 0.6 });
 
   let y = top + pad + headingH;
-  for (const t of trails) {
+  for (const l of lines) {
     doc
       .font('Helvetica')
       .fontSize(8.5)
       .fillColor(PALETTE.ink)
-      .text(`${fmtTime(t.start, data.window.zone)} — ${t.cameras.join(' -> ')}`, PAGE.margin + pad, y, {
-        width: w - pad * 2,
-      });
-    y += lineH;
+      .text(l.text, PAGE.margin + pad, y, { width: textWidth });
+    y += l.lineH;
   }
 
   doc
@@ -377,7 +390,7 @@ function drawTrailsBanner(doc: Doc, data: ReportData, trails: CrossCameraTrail[]
     .fontSize(7)
     .fillColor(PALETTE.muted)
     .text('Heuristic (time + camera adjacency), not confirmed identity tracking.', PAGE.margin + pad, y, {
-      width: w - pad * 2,
+      width: textWidth,
     });
 
   doc.y = top + h + 20;
